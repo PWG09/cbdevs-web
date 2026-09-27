@@ -1,3 +1,6 @@
-import type { NextConfig } from "next";
-const nextConfig: NextConfig = { poweredByHeader: false, reactStrictMode: true };
+const nextConfig = {
+  poweredByHeader: false,
+  reactStrictMode: true,
+};
+
 export default nextConfig;
