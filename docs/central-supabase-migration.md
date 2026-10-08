@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-This is the first additive foundation migration for the new, empty shared Supabase project. It creates shared identity/profile, organization membership, app catalog, per-organization app enablement, user app permissions, and audit-log tables. It does not import Firebase users/data, move existing inquiries, change any production environment variables, or delete legacy systems.
+This is the first additive foundation migration for the new, empty shared Supabase project. Scope is limited to CBDEVS Admin, CBDEVS Web, CBDEVS Courses, and the CBDEVS Client Portal. It creates shared identity/profile, organization membership, app catalog, per-organization app enablement, user app permissions, and audit-log tables. DetailFlow, QuoteSnap, and QuoteAI are explicitly excluded: no tables, users, data, auth configuration, or database connections for those products are to be added to this central project. It does not import Firebase users/data, move existing inquiries, change any production environment variables, or delete legacy systems.
 
 The migration is staged on branch `feat/central-supabase-foundation`. It must be reviewed and tested before merging or applying to a hosted database.
 
@@ -29,7 +29,7 @@ The migration is staged on branch `feat/central-supabase-foundation`. It must be
    npx supabase db push
    npx supabase gen types typescript --linked > types/supabase.ts
    ```
-   Do not run `db reset` against a linked/remote project. Never point this workflow at DetailFlow, QuoteSnap, or another existing production project.
+   Do not run `db reset` against a linked/remote project. Never point this workflow at DetailFlow, QuoteSnap, QuoteAI, or another existing production project.
 
 ## Environment variables
 
@@ -47,7 +47,7 @@ For apps migrated to the shared project, use that project's URL and publishable/
 
 - Add automated pgTAP tests for RLS and cross-organization IDOR attempts.
 - Add product-specific tables in separate, reviewed migrations; avoid mixing app schemas in one giant migration.
-- Migrate each app's sign-in, session handling, authorization, and data access independently.
+- Migrate only CBDEVS Admin, CBDEVS Web, CBDEVS Courses, and the CBDEVS Client Portal sign-in, session handling, authorization, and data access independently. DetailFlow, QuoteSnap, and QuoteAI remain outside this project.
 - For the public website's `inquiries` table, decide whether to keep it in this project or migrate it into the shared schema, then add an explicit least-privilege insert path. The current `supabase/schema.sql` is a legacy standalone setup script, not a migration and should not be run as part of the central migration workflow.
 - Verify email confirmation, password reset, OAuth redirect URLs, storage policies, webhook secrets, billing, monitoring, and deployment variables in a staging environment.
 - Keep Firebase and every previous Supabase project available as read-only/reference until the new paths are validated. No legacy project should be deleted as part of this rollout.
