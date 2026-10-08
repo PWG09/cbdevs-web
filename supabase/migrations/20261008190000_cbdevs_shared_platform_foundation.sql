@@ -1,4 +1,6 @@
 -- CBDEVS shared platform foundation.
+-- Scope is limited to CBDEVS Admin, Web, Courses, and Client Portal.
+-- DetailFlow, QuoteSnap, and QuoteAI are intentionally separate and are not registered here.
 -- Safe additive migration: does not migrate legacy records or alter existing production tables.
 begin;
 
@@ -86,10 +88,7 @@ insert into public.app_catalog (app_key, display_name) values
   ('admin', 'CBDEVS Admin'),
   ('web', 'CBDEVS Web'),
   ('courses', 'CBDEVS Courses'),
-  ('client-portal', 'CBDEVS Client Portal'),
-  ('detailflow', 'DetailFlow'),
-  ('quoteai', 'QuoteAI'),
-  ('quotesnap', 'QuoteSnap')
+  ('client-portal', 'CBDEVS Client Portal')
 on conflict (app_key) do nothing;
 
 create or replace function private.is_org_member(p_org_id uuid)
