@@ -235,11 +235,8 @@ create policy org_members_select_members on public.organization_members
   for select to authenticated using (
     user_id = (select auth.uid()) or private.has_org_role(organization_id, array['owner','admin','manager'])
   );
-drop policy if exists org_members_admin_manage on public.organization_members;
-create policy org_members_admin_manage on public.organization_members
-  for all to authenticated
-  using (private.has_org_role(organization_id, array['owner','admin']))
-  with check (private.has_org_role(organization_id, array['owner','admin']));
+-- Membership writes are intentionally not exposed directly to authenticated clients.
+-- Add dedicated, audited RPCs for invitations and role changes before enabling them.
 
 drop policy if exists app_catalog_authenticated_read on public.app_catalog;
 create policy app_catalog_authenticated_read on public.app_catalog
@@ -282,7 +279,7 @@ create policy audit_logs_insert_member on public.audit_logs
 
 grant select, insert, update on public.profiles to authenticated;
 grant select, update on public.organizations to authenticated;
-grant select, insert, update, delete on public.organization_members to authenticated;
+grant select on public.organization_members to authenticated;
 grant select on public.app_catalog to authenticated;
 grant select, insert, update, delete on public.organization_apps to authenticated;
 grant select, insert, update, delete on public.user_app_permissions to authenticated;
