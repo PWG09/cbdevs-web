@@ -149,3 +149,27 @@ export function clientIp(headers: { get(name: string): string | null }): string 
   const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return forwarded || "unknown";
 }
+
+// PostgREST reports an unknown RPC as PGRST202; Postgres itself as 42883.
+export function isMissingFunction(error: { code?: string | null } | null | undefined): boolean {
+  return !!error && (error.code === "PGRST202" || error.code === "42883");
+}
+
+// Row for the original cbdevs_inquiries schema (before the leads CRM migration).
+// Fields that schema has no columns for are appended to the message so nothing is lost.
+export function legacyInsertRow(lead: InquiryInput) {
+  const budget = BUDGET_OPTIONS.find((o) => o.value === lead.budgetRange)?.label;
+  const extras = [
+    lead.company && `Empresa: ${lead.company}`,
+    lead.serviceInterest && `Servicio: ${lead.serviceInterest}`,
+    budget && `Presupuesto: ${budget}`,
+  ].filter(Boolean);
+  return {
+    app_key: "web",
+    name: lead.name,
+    email: lead.email,
+    phone: lead.phone,
+    message: extras.length ? `${lead.message}\n\n${extras.join("\n")}` : lead.message,
+    status: "new",
+  };
+}

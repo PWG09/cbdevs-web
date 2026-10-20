@@ -83,3 +83,24 @@ test("client ip prefers x-real-ip, then first forwarded hop", () => {
   assert.equal(clientIp(h({ "x-forwarded-for": "2.2.2.2, 3.3.3.3" })), "2.2.2.2");
   assert.equal(clientIp(h({})), "unknown");
 });
+
+test("missing-function detection covers PostgREST and Postgres codes", async () => {
+  const { isMissingFunction } = await import("../lib/inquiry.ts");
+  assert.equal(isMissingFunction({ code: "PGRST202" }), true);
+  assert.equal(isMissingFunction({ code: "42883" }), true);
+  assert.equal(isMissingFunction({ code: "22023" }), false);
+  assert.equal(isMissingFunction(null), false);
+});
+
+test("legacy row keeps extra fields inside the message", async () => {
+  const { legacyInsertRow } = await import("../lib/inquiry.ts");
+  const parsed = parseInquiry(valid, NOW);
+  const row = legacyInsertRow(parsed.data);
+  assert.deepEqual(Object.keys(row).sort(), ["app_key", "email", "message", "name", "phone", "status"]);
+  assert.equal(row.status, "new");
+  assert.match(row.message, /Empresa: Taquería Ana/);
+  assert.match(row.message, /Servicio: Sitio Web/);
+  assert.match(row.message, /Presupuesto: \$10,000 – \$30,000 MXN/);
+  const bare = legacyInsertRow(parseInquiry({ ...valid, company: "", service: "", budget: "" }, NOW).data);
+  assert.equal(bare.message, valid.message);
+});

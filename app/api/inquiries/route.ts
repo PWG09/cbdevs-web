@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { clientIp, isAllowedOrigin, parseInquiry } from "../../../lib/inquiry";
+import { clientIp, isAllowedOrigin, isMissingFunction, legacyInsertRow, parseInquiry } from "../../../lib/inquiry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,6 +80,18 @@ export async function POST(req: Request) {
       p_attribution: lead.attribution,
       p_consent: true,
     });
+
+    if (error && isMissingFunction(error)) {
+      // The leads CRM migration is not applied yet: save the lead with the original
+      // schema so no inquiry is lost. Extra fields are kept in the message text.
+      console.warn("[CENTRAL_INQUIRY_FALLBACK] cbdevs_submit_inquiry not found; using direct insert");
+      const { error: insertError } = await supabase.from("cbdevs_inquiries").insert(legacyInsertRow(lead));
+      if (insertError) {
+        console.error("[CENTRAL_INQUIRY_INSERT_FAILED]", insertError.code, insertError.message);
+        return json({ error: GENERIC_ERROR }, 500);
+      }
+      return json({ ok: true }, 201);
+    }
 
     if (error) {
       // Keep database details out of public responses.
